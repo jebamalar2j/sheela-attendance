@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sheela Physiocare — Attendance</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#5b21b6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sheela Physio" />
+  <link rel="apple-touch-icon" href="logo_white.png" />
+  <link rel="icon" href="logo_white.png" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --p1: #3b0764; --p2: #5b21b6; --p3: #7c3aed; --p4: #a78bfa; --p5: #ede9fe;
+      --red: #be123c; --green: #15803d;
+      --g0: #fafafa; --g1: #f4f4f5; --g2: #e4e4e7; --g3: #a1a1aa; --g7: #3f3f46; --g9: #09090b;
+      --r: 14px; --sh: 0 4px 20px rgba(59,7,100,.1); --sh2: 0 8px 40px rgba(59,7,100,.18);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--g9);min-height:100dvh}
+
+    /* ── SCREENS ── */
+    .scr{display:none;min-height:100dvh;flex-direction:column}
+    .scr.on{display:flex}
+
+    /* ── HOME ── */
+    #s-home{
+      background:linear-gradient(150deg,var(--p1) 0%,var(--p2) 55%,#9333ea 100%);
+      align-items:center;justify-content:center;text-align:center;padding:2rem;gap:0
+    }
+    .h-logo{width:110px;height:110px;object-fit:contain;background:white;border-radius:22px;padding:10px;box-shadow:var(--sh2);margin-bottom:1.5rem}
+    .h-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,2.8rem);color:white;line-height:1.15}
+    .h-sub{color:var(--p4);margin:.4rem 0 2.5rem;font-size:.95rem}
+    .btn-stack{display:flex;flex-direction:column;gap:.7rem;width:100%;max-width:300px}
+
+    /* ── BUTTONS ── */
+    .btn{padding:.8rem 1.4rem;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;border:none;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:.45rem;text-decoration:none}
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+    .btn-white{background:white;color:var(--p1)}.btn-white:hover{background:var(--p5);transform:translateY(-1px)}
+    .btn-ghost{background:transparent;color:white;border:1.5px solid rgba(255,255,255,.45)}.btn-ghost:hover{border-color:white;background:rgba(255,255,255,.08)}
+    .btn-purple{background:var(--p2);color:white}.btn-purple:hover{background:var(--p1);transform:translateY(-1px)}
+    .btn-red{background:var(--red);color:white}.btn-red:hover{opacity:.88}
+    .btn-sm{padding:.45rem .9rem;font-size:.82rem;border-radius:8px}
+    .btn-outline-gray{background:transparent;color:var(--g7);border:1.5px solid var(--g2)}.btn-outline-gray:hover{background:var(--g1)}
+
+    /* ── CARD ── */
+    .card{background:white;border-radius:var(--r);box-shadow:var(--sh);padding:1.6rem;width:100%;max-width:400px}
+    .card-title{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--p1);margin-bottom:1.2rem}
+
+    /* ── FORM ── */
+    .fg{margin-bottom:.9rem}
+    label{display:block;font-size:.82rem;font-weight:500;color:var(--g7);margin-bottom:.3rem}
+    input,select{width:100%;padding:.65rem .95rem;border:1.5px solid var(--g2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.92rem;color:var(--g9);background:var(--g0);transition:border-color .18s}
+    input:focus,select:focus{outline:none;border-color:var(--p3);background:white}
+    .err{color:var(--red);font-size:.8rem;margin-top:.3rem}
+    .ok{color:var(--green);font-size:.8rem;margin-top:.3rem}
+
+    /* ── TOP BAR ── */
+    .topbar{background:white;border-bottom:1px solid var(--g1);padding:.8rem 1.1rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+    .tlogo{display:flex;align-items:center;gap:.55rem}
+    .tlogo img{width:32px;height:32px;object-fit:contain}
+    .tlogo span{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--p1)}
+    .tact{display:flex;gap:.4rem;align-items:center}
+
+    /* ── TABS ── */
+    .tabs{display:flex;background:var(--g1);border-radius:10px;padding:3px;margin:0 1rem 1.1rem;flex-shrink:0}
+    .tab{flex:1;padding:.5rem;border-radius:7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:var(--g3);cursor:pointer;transition:all .18s}
+    .tab.on{background:white;color:var(--p1);box-shadow:0 1px 4px rgba(0,0,0,.09)}
+
+    /* ── BODY SCROLL ── */
+    .body{flex:1;overflow-y:auto;padding:1rem}
+
+    /* ── PATIENT CARDS ── */
+    .pc{background:white;border-radius:var(--r);padding:.95rem 1.1rem;box-shadow:0 1px 6px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;gap:.9rem;margin-bottom:.55rem}
+    .pi h3{font-size:.92rem;font-weight:600;color:var(--g9)}
+    .pi p{font-size:.77rem;color:var(--g3);margin-top:.1rem}
+    .badge{display:inline-block;padding:.18rem .55rem;border-radius:99px;font-size:.72rem;font-weight:600}
+    .bp{background:var(--p5);color:var(--p1)}.bg{background:#dcfce7;color:var(--green)}.br{background:#ffe4e6;color:var(--red)}
+
+    /* ── PROGRESS ── */
+    .pbar{height:5px;background:var(--g1);border-radius:99px;overflow:hidden;margin-top:.4rem}
+    .pfill{height:100%;background:linear-gradient(90deg,var(--p2),var(--p4));border-radius:99px;transition:width .5s}
+
+    /* ── STAT GRID ── */
+    .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.9rem}
+    .sc{background:white;border-radius:var(--r);padding:1.1rem;box-shadow:var(--sh);text-align:center}
+    .sn{font-family:'Playfair Display',serif;font-size:2rem;color:var(--p1);line-height:1}
+    .sl{font-size:.75rem;color:var(--g3);margin-top:.2rem}
+    .sc.hl .sn{color:var(--red)}
+
+    /* ── GEO CARD ── */
+    .geo{background:linear-gradient(135deg,var(--p1),var(--p3));border-radius:var(--r);padding:1.4rem;color:white;margin-bottom:.9rem;text-align:center;box-shadow:var(--sh2)}
+    .geo h3{font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.4rem}
+    .geo p{font-size:.82rem;opacity:.82;margin-bottom:1.1rem}
+    .geo-st{font-size:.87rem;margin:.65rem 0;padding:.55rem .9rem;border-radius:8px}
+    .gs-ok{background:rgba(255,255,255,.18)}.gs-far{background:rgba(190,18,60,.35)}.gs-wait{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+
+    /* ── HISTORY ── */
+    .hcard{background:white;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:.9rem}
+    .hhead{padding:.9rem 1.1rem;border-bottom:1px solid var(--g1)}
+    .hi{display:flex;justify-content:space-between;align-items:center;padding:.65rem 1.1rem;border-bottom:1px solid var(--g1);font-size:.83rem}
+    .hi:last-child{border-bottom:none}
+
+    /* ── OVERLAY ── */
+    .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
+    .ov.hide{display:none}
+    .modal{width:100%;max-width:420px;max-height:90dvh;overflow-y:auto}
+
+    /* ── LOADER ── */
+    .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .7s linear infinite;display:inline-block;vertical-align:middle}
+    .spin-d{border-color:rgba(91,33,182,.15);border-top-color:var(--p2)}
+    @keyframes rot{to{transform:rotate(360deg)}}
+
+    .row{display:flex;gap:.5rem;align-items:center}
+    .sp{flex:1}
+    .mt{margin-top:1rem}
+    .sec-t{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--p1);margin-bottom:.8rem}
+    .muted{color:var(--g3);font-size:.87rem}
+
+    /* ── INFO ROW ── */
+    .info-card{background:white;border-radius:var(--r);box-shadow:var(--sh);padding:1rem 1.1rem;margin-bottom:.9rem}
+    .info-lbl{font-size:.77rem;color:var(--g3);margin-bottom:.25rem}
+    .info-val{font-size:.92rem;font-weight:500}
+
+    @media(max-width:360px){.sgrid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div id="s-home" class="scr on">
+  <img src="logo_white.png" alt="Sheela Physiocare" class="h-logo" />
+  <h1 class="h-title">Sheela<br/>Physiocare</h1>
+  <p class="h-sub">Attendance Portal · Mylapore</p>
+  <div class="btn-stack">
+    <button class="btn btn-white" onclick="showOv('ov-patient')">🙋 Patient Login</button>
+    <button class="btn btn-ghost" onclick="showOv('ov-admin')">🔐 Admin Login</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN SCREEN ══ -->
+<div id="s-admin" class="scr">
+  <div class="topbar">
+    <div class="tlogo"><img src="logo_white.png"/><span>Admin Panel</span></div>
+    <div class="tact">
+      <button class="btn btn-sm btn-purple" onclick="openAdd()">+ Add</button>
+      <button class="btn btn-sm btn-red" onclick="doLogout('admin')">Logout</button>
+    </div>
+  </div>
+  <div class="body">
+    <div class="tabs">
+      <button class="tab on" onclick="switchTab('patients',this)">Patients</button>
+      <button class="tab" onclick="switchTab('log',this)">Attendance Log</button>
+    </div>
+    <div id="t-patients">
+      <div class="sec-t">All Patients</div>
+      <div id="list-patients"><p class="muted">Loading…</p></div>
+    </div>
+    <div id="t-log" style="display:none">
+      <div class="sec-t">Recent Attendance</div>
+      <div id="list-log"><p class="muted">Loading…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PATIENT SCREEN ══ -->
+<div id="s-patient" class="scr">
+  <div class="topbar">
+    <div class="tlogo"><img src="logo_white.png"/><span id="pt-name">Patient</span></div>
+    <div class="tact"><button class="btn btn-sm btn-red" onclick="doLogout('patient')">Logout</button></div>
+  </div>
+  <div class="body">
+    <div class="sgrid">
+      <div class="sc"><div class="sn" id="s-done">—</div><div class="sl">Days Completed</div></div>
+      <div class="sc hl"><div class="sn" id="s-rem">—</div><div class="sl">Days Remaining</div></div>
+      <div class="sc" style="grid-column:1/-1">
+        <div class="sl" style="margin-bottom:.4rem">Package Progress</div>
+        <div class="pbar"><div class="pfill" id="s-prog" style="width:0%"></div></div>
+        <div class="sl mt" id="s-prog-t">0 / 0 days</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-lbl">Diagnosis</div>
+      <div class="info-val" id="pt-diag">—</div>
+    </div>
+    <div class="geo">
+      <h3>📍 Mark Attendance</h3>
+      <p>You must be within 75 m of the clinic.<br/>One check-in per day allowed.</p>
+      <div class="geo-st gs-wait" id="geo-st">Checking your location…</div>
+      <button class="btn btn-white" id="mark-btn" onclick="markAtt()" disabled>Mark Today's Attendance</button>
+    </div>
+    <div class="hcard">
+      <div class="hhead"><div class="sec-t" style="margin:0">Attendance History</div></div>
+      <div id="att-hist"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAYS ══ -->
+
+<!-- Admin login -->
+<div id="ov-admin" class="ov hide">
+  <div class="card modal">
+    <div class="card-title">🔐 Admin Login</div>
+    <div class="fg"><label>Password</label><input type="password" id="a-pass" placeholder="••••••••" /></div>
+    <div class="err" id="a-err"></div>
+    <div class="row mt"><button class="btn btn-outline-gray btn-sm" onclick="hideOv('ov-admin')">Cancel</button><div class="sp"></div><button class="btn btn-purple" id="a-btn" onclick="doAdminLogin()">Login</button></div>
+  </div>
+</div>
+
+<!-- Patient login -->
+<div id="ov-patient" class="ov hide">
+  <div class="card modal">
+    <div class="card-title">🙋 Patient Login</div>
+    <div class="fg"><label>Your Patient ID</label><input type="text" id="p-id" placeholder="e.g. SP001" autocapitalize="characters" /></div>
+    <div class="err" id="p-err"></div>
+    <div class="row mt"><button class="btn btn-outline-gray btn-sm" onclick="hideOv('ov-patient')">Cancel</button><div class="sp"></div><button class="btn btn-purple" id="p-btn" onclick="doPatientLogin()">View My Data</button></div>
+  </div>
+</div>
+
+<!-- Add/Edit patient -->
+<div id="ov-form" class="ov hide">
+  <div class="card modal">
+    <div class="card-title" id="form-title">Add New Patient</div>
+    <div class="fg"><label>Patient ID *</label><input type="text" id="f-pid" placeholder="SP001" autocapitalize="characters" /></div>
+    <div class="fg"><label>Full Name *</label><input type="text" id="f-name" placeholder="Patient full name" /></div>
+    <div class="fg"><label>Phone (WhatsApp)</label><input type="tel" id="f-phone" placeholder="+919876543210" /></div>
+    <div class="fg"><label>Diagnosis</label><input type="text" id="f-diag" placeholder="e.g. Lumbar spondylosis" /></div>
+    <div class="fg"><label>Package Days *</label><input type="number" id="f-days" placeholder="20" min="1" /></div>
+    <div class="err" id="f-err"></div>
+    <div class="ok" id="f-ok"></div>
+    <div class="row mt"><button class="btn btn-outline-gray btn-sm" onclick="hideOv('ov-form')">Cancel</button><div class="sp"></div><button class="btn btn-purple" id="f-btn" onclick="savePatient()">Save</button></div>
+  </div>
+</div>
+
+<script>
+// ── YOUR APPS SCRIPT WEB APP URL ─────────────────────────────
+// After deploying your Apps Script, paste the URL here:
+const API = "https://script.google.com/macros/s/AKfycbwAM2SIcLYtX8Br16498EZFDu-Ly582cJN33zTXBBHdL9mkVMGcze0Ngy-zOa5_-leIvA/exec";
+// ─────────────────────────────────────────────────────────────
+
+// Clinic GPS — Sheela Physiocare, 139/61 Luz Church Rd, Mylapore
+const CLINIC_LAT = 13.0338, CLINIC_LNG = 80.2676, RADIUS = 75;
+
+let adminPass = "", currentPt = null, editPid = null;
+
+// ── OVERLAY ──
+function showOv(id){ document.getElementById(id).classList.remove('hide');
+  const pid = new URLSearchParams(location.search).get('pid');
+  if(id==='ov-patient' && pid) document.getElementById('p-id').value = pid;
+}
+function hideOv(id){ document.getElementById(id).classList.add('hide'); }
+
+// ── SCREEN ──
+function showScr(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+// ── API CALL ──
+async function api(params){
+  const url = API + '?' + new URLSearchParams(params).toString();
+  const r = await fetch(url);
+  return r.json();
+}
+
+// ── ADMIN LOGIN ──
+async function doAdminLogin(){
+  const pass = document.getElementById('a-pass').value;
+  const err  = document.getElementById('a-err');
+  const btn  = document.getElementById('a-btn');
+  err.textContent=''; btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    const d = await api({action:'adminLogin', password:pass});
+    if(d.success){ adminPass=pass; hideOv('ov-admin'); showScr('s-admin'); loadPatients(); }
+    else err.textContent = 'Wrong password. Try again.';
+  } catch(e){ err.textContent='Network error. Check internet.'; }
+  btn.disabled=false; btn.textContent='Login';
+}
+
+function doLogout(who){
+  if(who==='admin'){ adminPass=''; showScr('s-home'); }
+  else { currentPt=null; if(window._geo)navigator.geolocation.clearWatch(window._geo); showScr('s-home'); }
+}
+
+// ── TABS ──
+function switchTab(tab, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on')); el.classList.add('on');
+  document.getElementById('t-patients').style.display = tab==='patients'?'':'none';
+  document.getElementById('t-log').style.display      = tab==='log'?'':'none';
+  if(tab==='log') loadLog();
+}
+
+// ── LOAD PATIENTS ──
+async function loadPatients(){
+  const c = document.getElementById('list-patients');
+  c.innerHTML='<p class="muted"><span class="spin spin-d"></span> Loading…</p>';
+  const d = await api({action:'getPatients', password:adminPass});
+  if(!d.success){ c.innerHTML='<p class="muted">'+d.error+'</p>'; return; }
+  if(!d.patients.length){ c.innerHTML='<p class="muted">No patients yet. Click + Add.</p>'; return; }
+  c.innerHTML='';
+  d.patients.forEach(p=>{
+    const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
+    const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
+    const el=document.createElement('div'); el.className='pc';
+    el.innerHTML=`<div class="pi" style="flex:1;min-width:0">
+      <h3>${p.name} <span class="badge bp">${p.id}</span></h3>
+      <p>${p.diagnosis||'No diagnosis'} · ${p.phone||'No phone'}</p>
+      <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+      <p style="font-size:.75rem;color:var(--g3);margin-top:.2rem">${done}/${tot} days &nbsp;
+        <span class="badge ${rem===0?'bg':'br'}">${rem} left</span></p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.4rem">
+      <button class="btn btn-sm btn-purple" onclick="openEdit('${p.id}')">Edit</button>
+      <button class="btn btn-sm btn-red" onclick="delPt('${p.id}','${p.name}')">Del</button>
+    </div>`;
+    c.appendChild(el);
+  });
+}
+
+// ── LOAD LOG ──
+async function loadLog(){
+  const c=document.getElementById('list-log');
+  c.innerHTML='<p class="muted"><span class="spin spin-d"></span> Loading…</p>';
+  const d=await api({action:'getAttendanceLog',password:adminPass});
+  if(!d.success){ c.innerHTML='<p class="muted">'+d.error+'</p>'; return; }
+  if(!d.log.length){ c.innerHTML='<p class="muted">No attendance records yet.</p>'; return; }
+  c.innerHTML='';
+  d.log.forEach(r=>{
+    const el=document.createElement('div'); el.className='pc';
+    el.innerHTML=`<div><h3>${r.name} <span class="badge bp">${r.pid}</span></h3>
+      <p>${r.date}</p></div><span class="badge bg">✓ Present</span>`;
+    c.appendChild(el);
+  });
+}
+
+// ── ADD / EDIT PATIENT ──
+function openAdd(){
+  editPid=null;
+  ['f-pid','f-name','f-phone','f-diag','f-days'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('f-pid').disabled=false;
+  document.getElementById('form-title').textContent='Add New Patient';
+  document.getElementById('f-err').textContent=''; document.getElementById('f-ok').textContent='';
+  showOv('ov-form');
+}
+async function openEdit(pid){
+  const d=await api({action:'getPatient',pid});
+  if(!d.success) return;
+  const p=d.patient; editPid=pid;
+  document.getElementById('f-pid').value=p.id; document.getElementById('f-pid').disabled=true;
+  document.getElementById('f-name').value=p.name||'';
+  document.getElementById('f-phone').value=p.phone||'';
+  document.getElementById('f-diag').value=p.diagnosis||'';
+  document.getElementById('f-days').value=p.packageDays||'';
+  document.getElementById('form-title').textContent='Edit Patient';
+  document.getElementById('f-err').textContent=''; document.getElementById('f-ok').textContent='';
+  showOv('ov-form');
+}
+async function savePatient(){
+  const pid  = document.getElementById('f-pid').value.trim().toUpperCase();
+  const name = document.getElementById('f-name').value.trim();
+  const phone= document.getElementById('f-phone').value.trim();
+  const diag = document.getElementById('f-diag').value.trim();
+  const days = document.getElementById('f-days').value.trim();
+  const err  = document.getElementById('f-err');
+  const ok   = document.getElementById('f-ok');
+  const btn  = document.getElementById('f-btn');
+  err.textContent=''; ok.textContent='';
+  if(!pid||!name||!days){ err.textContent='Patient ID, Name, and Package Days are required.'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  const params = editPid
+    ? {action:'updatePatient',password:adminPass,pid,name,phone,diagnosis:diag,packageDays:days}
+    : {action:'addPatient',   password:adminPass,pid,name,phone,diagnosis:diag,packageDays:days};
+  const d = await api(params);
+  btn.disabled=false; btn.textContent='Save';
+  if(d.success){ ok.textContent='Saved!'; setTimeout(()=>{ hideOv('ov-form'); loadPatients(); },700); }
+  else err.textContent = d.error||'Error saving.';
+}
+async function delPt(pid,name){
+  if(!confirm(`Delete ${name} (${pid})?`)) return;
+  const d=await api({action:'deletePatient',password:adminPass,pid});
+  if(d.success) loadPatients();
+  else alert(d.error);
+}
+
+// ── PATIENT LOGIN ──
+async function doPatientLogin(){
+  const pid = document.getElementById('p-id').value.trim().toUpperCase();
+  const err = document.getElementById('p-err');
+  const btn = document.getElementById('p-btn');
+  err.textContent='';
+  if(!pid){ err.textContent='Please enter your Patient ID.'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    const d=await api({action:'getPatient',pid});
+    if(d.success){ currentPt=d.patient; hideOv('ov-patient'); renderPt(); showScr('s-patient'); startGeo(); }
+    else err.textContent=d.error||'Patient ID not found.';
+  } catch(e){ err.textContent='Network error. Check internet.'; }
+  btn.disabled=false; btn.textContent='View My Data';
+}
+
+// ── RENDER PATIENT ──
+function renderPt(){
+  const p=currentPt;
+  const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
+  const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
+  document.getElementById('pt-name').textContent=p.name;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-rem').textContent=rem;
+  document.getElementById('s-prog').style.width=pct+'%';
+  document.getElementById('s-prog-t').textContent=`${done} / ${tot} days`;
+  document.getElementById('pt-diag').textContent=p.diagnosis||'Not specified';
+
+  const hist=document.getElementById('att-hist');
+  const dates=[...p.attendanceDates].reverse();
+  if(!dates.length){ hist.innerHTML='<div class="hi muted">No attendance yet.</div>'; return; }
+  hist.innerHTML=dates.map(ds=>{
+    const dt=new Date(ds);
+    return `<div class="hi"><span>${dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</span><span class="badge bg">✓</span></div>`;
+  }).join('');
+
+  const today=toDateStr();
+  if(p.attendanceDates.includes(today)){
+    document.getElementById('geo-st').className='geo-st gs-ok';
+    document.getElementById('geo-st').textContent='✅ Attendance already marked for today!';
+    const b=document.getElementById('mark-btn'); b.disabled=true; b.textContent='Already Marked Today';
+  }
+}
+
+// ── GEO ──
+function toDateStr(){ return new Date().toISOString().slice(0,10); }
+function dist(la1,ln1,la2,ln2){
+  const R=6371000,dLa=(la2-la1)*Math.PI/180,dLn=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLn/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function startGeo(){
+  const st=document.getElementById('geo-st'), btn=document.getElementById('mark-btn');
+  const today=toDateStr();
+  if(currentPt.attendanceDates.includes(today)) return;
+  if(!navigator.geolocation){ st.className='geo-st gs-far'; st.textContent='❌ Geolocation not supported.'; return; }
+  st.textContent='📡 Detecting location…'; st.className='geo-st gs-wait';
+  window._geo=navigator.geolocation.watchPosition(pos=>{
+    const d=Math.round(dist(pos.coords.latitude,pos.coords.longitude,CLINIC_LAT,CLINIC_LNG));
+    if(d<=RADIUS){ st.className='geo-st gs-ok'; st.textContent=`✅ You are ${d} m from the clinic — ready to mark!`; btn.disabled=false; }
+    else { st.className='geo-st gs-far'; st.textContent=`📍 You are ${d} m away. Come within 75 m of the clinic.`; btn.disabled=true; }
+  }, ()=>{ st.className='geo-st gs-far'; st.textContent='❌ Location denied. Allow location access and reload.'; },
+  {enableHighAccuracy:true,maximumAge:15000,timeout:15000});
+}
+
+async function markAtt(){
+  const today=toDateStr(), pid=currentPt.id;
+  const btn=document.getElementById('mark-btn'), st=document.getElementById('geo-st');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:10000}));
+    const d=dist(pos.coords.latitude,pos.coords.longitude,CLINIC_LAT,CLINIC_LNG);
+    if(d>RADIUS){ st.className='geo-st gs-far'; st.textContent=`❌ ${Math.round(d)} m away. Move closer.`; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; return; }
+    const r=await api({action:'markAttendance',pid,date:today,lat:pos.coords.latitude,lng:pos.coords.longitude});
+    if(r.success){
+      currentPt.attendanceDates=r.dates;
+      renderPt();
+      if(window._geo)navigator.geolocation.clearWatch(window._geo);
+      st.className='geo-st gs-ok'; st.textContent='🎉 Attendance marked! See you tomorrow.';
+      btn.textContent='Already Marked Today';
+    } else { st.textContent='❌ '+r.error; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
+  } catch(e){ st.textContent='❌ '+e.message; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
+}
+
+// ── ENTER KEY ──
+document.getElementById('a-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
+document.getElementById('p-id').addEventListener('keydown',e=>{if(e.key==='Enter')doPatientLogin()});
+
+// ── SERVICE WORKER ──
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
