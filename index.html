@@ -377,8 +377,8 @@ async function savePatient(){
   if(!pid||!name||!days){ err.textContent='Patient ID, Name, and Package Days are required.'; return; }
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   const params = editPid
-  ? {action:'updatePatient',password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days}
-  : {action:'addPatient',   password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days};
+    ? {action:'updatePatient',password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days}
+    : {action:'addPatient',   password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days};
   const d = await api(params);
   btn.disabled=false; btn.textContent='Save';
   if(d.success){
@@ -390,7 +390,7 @@ async function savePatient(){
   }
   else err.textContent = d.error||'Error saving.';
 }
-async function delPt(pid,name){
+  async function delPt(pid,name){
   if(!confirm(`Delete ${name} (${pid})?`)) return;
   const d=await api({action:'deletePatient',password:adminPass,pid});
   if(d.success) loadPatients();
