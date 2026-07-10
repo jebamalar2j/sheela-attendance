@@ -343,7 +343,7 @@ async function loadLog(){
 // ── ADD / EDIT PATIENT ──
 function openAdd(){
   editPid=null;
-  ['f-pid','f-name','f-phone','f-diag','f-days'].forEach(i=>document.getElementById(i).value='');
+  ['f-pid','f-name','f-phone','f-email','f-diag','f-days'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f-pid').disabled=false;
   document.getElementById('form-title').textContent='Add New Patient';
   document.getElementById('f-err').textContent=''; document.getElementById('f-ok').textContent='';
