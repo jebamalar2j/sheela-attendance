@@ -230,6 +230,7 @@
     <div class="fg"><label>Patient ID *</label><input type="text" id="f-pid" placeholder="SP001" autocapitalize="characters" /></div>
     <div class="fg"><label>Full Name *</label><input type="text" id="f-name" placeholder="Patient full name" /></div>
     <div class="fg"><label>Phone (WhatsApp)</label><input type="tel" id="f-phone" placeholder="+919876543210" /></div>
+    <div class="fg"><label>Email Address</label><input type="email" id="f-email" placeholder="patient@email.com" /></div>
     <div class="fg"><label>Diagnosis</label><input type="text" id="f-diag" placeholder="e.g. Lumbar spondylosis" /></div>
     <div class="fg"><label>Package Days *</label><input type="number" id="f-days" placeholder="20" min="1" /></div>
     <div class="err" id="f-err"></div>
@@ -355,6 +356,7 @@ async function openEdit(pid){
   document.getElementById('f-pid').value=p.id; document.getElementById('f-pid').disabled=true;
   document.getElementById('f-name').value=p.name||'';
   document.getElementById('f-phone').value=p.phone||'';
+  document.getElementById('f-email').value=p.email||'';
   document.getElementById('f-diag').value=p.diagnosis||'';
   document.getElementById('f-days').value=p.packageDays||'';
   document.getElementById('form-title').textContent='Edit Patient';
@@ -365,6 +367,7 @@ async function savePatient(){
   const pid  = document.getElementById('f-pid').value.trim().toUpperCase();
   const name = document.getElementById('f-name').value.trim();
   const phone= document.getElementById('f-phone').value.trim();
+  const email= document.getElementById('f-email').value.trim();
   const diag = document.getElementById('f-diag').value.trim();
   const days = document.getElementById('f-days').value.trim();
   const err  = document.getElementById('f-err');
@@ -374,11 +377,17 @@ async function savePatient(){
   if(!pid||!name||!days){ err.textContent='Patient ID, Name, and Package Days are required.'; return; }
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   const params = editPid
-    ? {action:'updatePatient',password:adminPass,pid,name,phone,diagnosis:diag,packageDays:days}
-    : {action:'addPatient',   password:adminPass,pid,name,phone,diagnosis:diag,packageDays:days};
+  ? {action:'updatePatient',password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days}
+  : {action:'addPatient',   password:adminPass,pid,name,phone,email,diagnosis:diag,packageDays:days};
   const d = await api(params);
   btn.disabled=false; btn.textContent='Save';
-  if(d.success){ ok.textContent='Saved!'; setTimeout(()=>{ hideOv('ov-form'); loadPatients(); },700); }
+  if(d.success){
+    ok.textContent='Saved!';
+    if(!editPid && email){
+      await api({action:'sendWelcomeEmail',password:adminPass,pid,name,email,days});
+    }
+    setTimeout(()=>{ hideOv('ov-form'); loadPatients(); },700);
+  }
   else err.textContent = d.error||'Error saving.';
 }
 async function delPt(pid,name){
