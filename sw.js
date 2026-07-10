@@ -1,4 +1,4 @@
-const CACHE = 'sheela-v3';
+const CACHE = 'sheela-v4';
 const FILES = ['./', './index.html', './manifest.json', './logo_white.png'];
 
 self.addEventListener('install', e => {
