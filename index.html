@@ -276,15 +276,6 @@ function toDateStr(){
   const ist=new Date(now.getTime()+(5.5*60*60*1000));
   return ist.toISOString().slice(0,10);
 }
-  function toISTDisplay(dateStr){
-  if(!dateStr) return '';
-  // If already plain date YYYY-MM-DD, return as is
-  if(dateStr.length === 10) return dateStr;
-  // Otherwise it's a full ISO string — convert to IST
-  const d = new Date(dateStr);
-  const ist = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
-  return ist.toISOString().slice(0,10);
-}
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────
 async function doAdminLogin(){
@@ -370,8 +361,7 @@ async function loadLog(){
   c.innerHTML='';
   d.log.forEach(r=>{
     const bkey=branchKey(r.branch||'mylapore');
-    // Convert date to IST — handles both "2026-07-14" and "2026-07-13T18:30:00.000Z"
-    const displayDate = toISTDisplay(r.date);
+    const displayDate=toISTDisplay(r.date);
     const el=document.createElement('div'); el.className='pc';
     el.innerHTML=`
       <div>
@@ -382,6 +372,7 @@ async function loadLog(){
     c.appendChild(el);
   });
 }
+
 // ── ADD / EDIT PATIENT ────────────────────────────────────────
 function openAdd(){
   editPid=null;
