@@ -6,6 +6,7 @@
   <title>Sheela Physiocare — Attendance</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#5b21b6" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sheela Physio" />
   <link rel="apple-touch-icon" href="logo_white.png" />
@@ -164,22 +165,17 @@
         </div>
       </div>
     </div>
-
-    <!-- GPS attendance (non-online) -->
     <div class="geo" id="geo-section">
       <h3>📍 Mark Attendance</h3>
       <p id="geo-branch-text">You must be within 75 m of the clinic.<br/>One check-in per day allowed.</p>
       <div class="geo-st gs-wait" id="geo-st">Checking your location…</div>
       <button class="btn btn-white" id="mark-btn" onclick="markAtt()" disabled>Mark Today's Attendance</button>
     </div>
-
-    <!-- Online attendance -->
     <div class="online-banner" id="online-section" style="display:none">
       <h3>💻 Online Session</h3>
       <p>You are registered for online sessions.<br/>Mark attendance before each session.</p>
       <button class="btn btn-white" id="mark-btn-online" onclick="markAttOnline()">Mark Today's Attendance</button>
     </div>
-
     <div class="hcard">
       <div class="hhead"><div class="sec-t" style="margin:0">Attendance History</div></div>
       <div id="att-hist"></div>
@@ -188,8 +184,6 @@
 </div>
 
 <!-- OVERLAYS -->
-
-<!-- Admin login -->
 <div id="ov-admin" class="ov hide">
   <div class="card modal">
     <div class="card-title">🔐 Admin Login</div>
@@ -199,7 +193,6 @@
   </div>
 </div>
 
-<!-- Patient login -->
 <div id="ov-patient" class="ov hide">
   <div class="card modal">
     <div class="card-title">🙋 Patient Login</div>
@@ -209,7 +202,6 @@
   </div>
 </div>
 
-<!-- Add/Edit patient -->
 <div id="ov-form" class="ov hide">
   <div class="card modal">
     <div class="card-title" id="form-title">Add New Patient</div>
@@ -237,45 +229,52 @@
 <script>
 const API = "https://script.google.com/macros/s/AKfycbzFS0PNafAGkoaT4HeaNYr57EhutxjYM-knJF5Kbqa9VNXZBSZ2ih30I8WmiCCHBCCb/exec";
 
-// ── BRANCH CONFIG ─────────────────────────────────────────────
 const BRANCHES = {
-  mylapore:  { name:"Mylapore",  lat:13.037369, lng:80.261560, address:"139/61, Luz Church Road, Mylapore, Chennai" },
-  korattur:  { name:"Korattur",  lat:13.117535, lng:80.187320, address:"No 62, Korattur Railway Station Rd, Korattur, Chennai" },
-  royapuram: { name:"Royapuram", lat:13.128877, lng:80.294964, address:"No. 319, S. N Chetty Street, Royapuram, Chennai" },
-  online:    { name:"Online",    lat:null,       lng:null,      address:"Online Sessions" }
+  mylapore:  { name:"Mylapore",  lat:13.037369, lng:80.261560,  address:"139/61, Luz Church Road, Mylapore, Chennai" },
+  korattur:  { name:"Korattur",  lat:13.117535, lng:80.187320,  address:"No 62, Korattur Railway Station Rd, Korattur, Chennai" },
+  royapuram: { name:"Royapuram", lat:13.128877, lng:80.294964,  address:"No. 319, S. N Chetty Street, Royapuram, Chennai" },
+  online:    { name:"Online",    lat:null,       lng:null,       address:"Online Sessions" }
 };
 const RADIUS = 75;
 
-let adminPass = "", currentPt = null, editPid = null;
+let adminPass="", currentPt=null, editPid=null;
 
-// ── BRANCH HELPERS ────────────────────────────────────────────
-function branchLabel(key) {
-  const map = { mylapore:"🏥 Mylapore", korattur:"🏥 Korattur", royapuram:"🏥 Royapuram", online:"💻 Online" };
-  return map[key] || key;
+function branchKey(val){
+  return String(val||'').toLowerCase().trim();
 }
-function branchBadgeClass(key) {
-  return "badge bb-" + (key || "mylapore");
+function branchLabel(key){
+  const map={mylapore:"🏥 Mylapore",korattur:"🏥 Korattur",royapuram:"🏥 Royapuram",online:"💻 Online"};
+  return map[branchKey(key)]||key;
+}
+function branchBadgeClass(key){
+  return "badge bb-"+branchKey(key);
+}
+function getBranch(key){
+  return BRANCHES[branchKey(key)] || BRANCHES["mylapore"];
 }
 
-// ── OVERLAY ───────────────────────────────────────────────────
 function showOv(id){
   document.getElementById(id).classList.remove('hide');
-  const pid = new URLSearchParams(location.search).get('pid');
-  if(id==='ov-patient' && pid) document.getElementById('p-id').value = pid;
+  const pid=new URLSearchParams(location.search).get('pid');
+  if(id==='ov-patient'&&pid) document.getElementById('p-id').value=pid;
 }
 function hideOv(id){ document.getElementById(id).classList.add('hide'); }
-
-// ── SCREEN ────────────────────────────────────────────────────
 function showScr(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
 }
 
-// ── API ───────────────────────────────────────────────────────
 async function api(params){
-  const url = API + '?' + new URLSearchParams(params).toString();
-  const r = await fetch(url);
+  const url=API+'?'+new URLSearchParams(params).toString();
+  const r=await fetch(url);
   return r.json();
+}
+
+// ── IST DATE ─────────────────────────────────────────────────
+function toDateStr(){
+  const now=new Date();
+  const ist=new Date(now.getTime()+(5.5*60*60*1000));
+  return ist.toISOString().slice(0,10);
 }
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────
@@ -284,20 +283,19 @@ async function doAdminLogin(){
   const err=document.getElementById('a-err');
   const btn=document.getElementById('a-btn');
   err.textContent=''; btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
-  try {
+  try{
     const d=await api({action:'adminLogin',password:pass});
     if(d.success){ adminPass=pass; hideOv('ov-admin'); showScr('s-admin'); loadPatients(); }
     else err.textContent='Wrong password. Try again.';
-  } catch(e){ err.textContent='Network error. Check internet.'; }
+  }catch(e){ err.textContent='Network error. Check internet.'; }
   btn.disabled=false; btn.textContent='Login';
 }
 
 function doLogout(who){
   if(who==='admin'){ adminPass=''; showScr('s-home'); }
-  else { currentPt=null; if(window._geo)navigator.geolocation.clearWatch(window._geo); showScr('s-home'); }
+  else{ currentPt=null; if(window._geo)navigator.geolocation.clearWatch(window._geo); showScr('s-home'); }
 }
 
-// ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on')); el.classList.add('on');
   document.getElementById('t-patients').style.display=tab==='patients'?'':'none';
@@ -309,46 +307,51 @@ function switchTab(tab,el){
 async function loadPatients(){
   const c=document.getElementById('list-patients');
   c.innerHTML='<p class="muted"><span class="spin spin-d"></span> Loading…</p>';
-  const d=await api({action:'getPatients',password:adminPass});
-  if(!d.success){ c.innerHTML='<p class="muted">'+d.error+'</p>'; return; }
-  if(!d.patients.length){ c.innerHTML='<p class="muted">No patients yet. Click + Add.</p>'; return; }
-  c.innerHTML='';
-  d.patients.forEach(p=>{
-    const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
-    const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
-    const branch=p.branch||'mylapore';
-    const phone=String(p.phone||'').replace(/[^0-9]/g,'');
-    const waMsg=encodeURIComponent(
-      'Welcome to Sheela Physiocare! 👋\n\n'+
-      'Dear '+p.name+',\n\n'+
-      'Your physiotherapy package has been activated.\n\n'+
-      '🪪 Patient ID : '+p.id+'\n'+
-      '🏥 Branch     : '+branchLabel(branch)+'\n'+
-      '📅 Package    : '+p.packageDays+' days\n\n'+
-      '📍 Mark your attendance daily using your personal link:\n'+
-      'https://jebamalar2j.github.io/sheela-attendance/?pid='+p.id+'\n\n'+
-      'See you soon! 💜\nSheela Physiocare'
-    );
-    const el=document.createElement('div'); el.className='pc';
-    el.innerHTML=`
-      <div class="pi" style="flex:1;min-width:0">
-        <h3>${p.name} <span class="badge bp">${p.id}</span> <span class="badge ${branchBadgeClass(branch)}">${branchLabel(branch)}</span></h3>
-        <p>${p.diagnosis||'No diagnosis'} · ${p.phone||'No phone'}</p>
-        <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
-        <p style="font-size:.75rem;color:var(--g3);margin-top:.2rem">${done}/${tot} days &nbsp;
-          <span class="badge ${rem===0?'bg':'br'}">${rem} left</span></p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.4rem">
-        <button class="btn btn-sm btn-purple" onclick="openEdit('${p.id}')">Edit</button>
-        <button class="btn btn-sm btn-red" onclick="delPt('${p.id}','${p.name}')">Del</button>
-        <a class="btn btn-sm" style="background:#25D366;color:white"
-          href="https://wa.me/${phone}?text=${waMsg}"
-          target="_blank">WhatsApp</a>
-      </div>`;
-    c.appendChild(el);
-  });
+  try{
+    const d=await api({action:'getPatients',password:adminPass});
+    if(!d.success){ c.innerHTML='<p class="muted">'+d.error+'</p>'; return; }
+    if(!d.patients.length){ c.innerHTML='<p class="muted">No patients yet. Click + Add.</p>'; return; }
+    c.innerHTML='';
+    d.patients.forEach(p=>{
+      const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
+      const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
+      const bkey=branchKey(p.branch||'mylapore');
+      const phone=String(p.phone||'').replace(/[^0-9]/g,'');
+      const waMsg=encodeURIComponent(
+        'Welcome to Sheela Physiocare! 👋\n\n'+
+        'Dear '+p.name+',\n\n'+
+        'Your physiotherapy package has been activated.\n\n'+
+        '🪪 Patient ID : '+p.id+'\n'+
+        '🏥 Branch     : '+branchLabel(bkey)+'\n'+
+        '📅 Package    : '+p.packageDays+' days\n\n'+
+        '📍 Mark your attendance daily using your personal link:\n'+
+        'https://jebamalar2j.github.io/sheela-attendance/?pid='+p.id+'\n\n'+
+        'See you soon! 💜\nSheela Physiocare'
+      );
+      const el=document.createElement('div'); el.className='pc';
+      el.innerHTML=`
+        <div class="pi" style="flex:1;min-width:0">
+          <h3>${p.name} <span class="badge bp">${p.id}</span> <span class="${branchBadgeClass(bkey)}">${branchLabel(bkey)}</span></h3>
+          <p>${p.diagnosis||'No diagnosis'} · ${p.phone||'No phone'}</p>
+          <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+          <p style="font-size:.75rem;color:var(--g3);margin-top:.2rem">${done}/${tot} days &nbsp;
+            <span class="badge ${rem===0?'bg':'br'}">${rem} left</span></p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
+          <button class="btn btn-sm btn-purple" onclick="openEdit('${p.id}')">Edit</button>
+          <button class="btn btn-sm btn-red" onclick="delPt('${p.id}','${p.name}')">Del</button>
+          <a class="btn btn-sm" style="background:#25D366;color:white"
+            href="https://wa.me/${phone}?text=${waMsg}"
+            target="_blank">WhatsApp</a>
+        </div>`;
+      c.appendChild(el);
+    });
+  }catch(e){
+    c.innerHTML='<p class="muted">Error loading patients: '+e.message+'</p>';
+  }
 }
-  // ── LOAD LOG ──────────────────────────────────────────────────
+
+// ── LOAD LOG ──────────────────────────────────────────────────
 async function loadLog(){
   const c=document.getElementById('list-log');
   c.innerHTML='<p class="muted"><span class="spin spin-d"></span> Loading…</p>';
@@ -357,12 +360,12 @@ async function loadLog(){
   if(!d.log.length){ c.innerHTML='<p class="muted">No attendance records yet.</p>'; return; }
   c.innerHTML='';
   d.log.forEach(r=>{
-    const branch=r.branch||'mylapore';
+    const bkey=branchKey(r.branch||'mylapore');
     const el=document.createElement('div'); el.className='pc';
     el.innerHTML=`
       <div>
         <h3>${r.name} <span class="badge bp">${r.pid}</span></h3>
-        <p>${r.date} · <span class="badge ${branchBadgeClass(branch)}">${branchLabel(branch)}</span></p>
+        <p>${r.date} · <span class="${branchBadgeClass(bkey)}">${branchLabel(bkey)}</span></p>
       </div>
       <span class="badge bg">✓ Present</span>`;
     c.appendChild(el);
@@ -390,7 +393,7 @@ async function openEdit(pid){
   document.getElementById('f-email').value=p.email||'';
   document.getElementById('f-diag').value=p.diagnosis||'';
   document.getElementById('f-days').value=p.packageDays||'';
-  document.getElementById('f-branch').value=p.branch||'mylapore';
+  document.getElementById('f-branch').value=branchKey(p.branch||'mylapore');
   document.getElementById('form-title').textContent='Edit Patient';
   document.getElementById('f-err').textContent='';
   document.getElementById('f-ok').textContent='';
@@ -439,11 +442,11 @@ async function doPatientLogin(){
   err.textContent='';
   if(!pid){ err.textContent='Please enter your Patient ID.'; return; }
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
-  try {
+  try{
     const d=await api({action:'getPatient',pid});
     if(d.success){ currentPt=d.patient; hideOv('ov-patient'); renderPt(); showScr('s-patient'); initAttendance(); }
     else err.textContent=d.error||'Patient ID not found.';
-  } catch(e){ err.textContent='Network error. Check internet.'; }
+  }catch(e){ err.textContent='Network error. Check internet.'; }
   btn.disabled=false; btn.textContent='View My Data';
 }
 
@@ -452,28 +455,26 @@ function renderPt(){
   const p=currentPt;
   const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
   const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
-  const branch=p.branch||'mylapore';
+  const bkey=branchKey(p.branch||'mylapore');
   document.getElementById('pt-name').textContent=p.name;
   document.getElementById('s-done').textContent=done;
   document.getElementById('s-rem').textContent=rem;
   document.getElementById('s-prog').style.width=pct+'%';
   document.getElementById('s-prog-t').textContent=`${done} / ${tot} days`;
   document.getElementById('pt-diag').textContent=p.diagnosis||'Not specified';
-  document.getElementById('pt-branch-badge').innerHTML=`<span class="badge ${branchBadgeClass(branch)}">${branchLabel(branch)}</span>`;
+  document.getElementById('pt-branch-badge').innerHTML=`<span class="${branchBadgeClass(bkey)}">${branchLabel(bkey)}</span>`;
 
-  // Show correct attendance section
-  if(branch==='online'){
+  if(bkey==='online'){
     document.getElementById('geo-section').style.display='none';
     document.getElementById('online-section').style.display='';
   } else {
     document.getElementById('geo-section').style.display='';
     document.getElementById('online-section').style.display='none';
-    const b=BRANCHES[branch];
+    const b=getBranch(bkey);
     document.getElementById('geo-branch-text').innerHTML=
       `You must be within 75 m of the <strong>${b.name}</strong> clinic.<br/>One check-in per day allowed.`;
   }
 
-  // History
   const hist=document.getElementById('att-hist');
   const dates=[...p.attendanceDates].reverse();
   if(!dates.length){ hist.innerHTML='<div class="hi muted">No attendance yet.</div>'; return; }
@@ -482,7 +483,6 @@ function renderPt(){
     return `<div class="hi"><span>${dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</span><span class="badge bg">✓</span></div>`;
   }).join('');
 
-  // Already marked today?
   const today=toDateStr();
   if(p.attendanceDates.includes(today)){
     document.getElementById('geo-st').className='geo-st gs-ok';
@@ -492,60 +492,52 @@ function renderPt(){
   }
 }
 
-// ── INIT ATTENDANCE (GPS or Online) ──────────────────────────
 function initAttendance(){
-  const branch=currentPt.branch||'mylapore';
-  if(branch==='online') return; // no GPS needed
-  startGeo(branch);
+  const bkey=branchKey(currentPt.branch||'mylapore');
+  if(bkey==='online') return;
+  startGeo(bkey);
 }
 
 // ── GEO ───────────────────────────────────────────────────────
-function toDateStr(){
-  const now = new Date();
-  const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-  return ist.toISOString().slice(0,10);
-}
 function distM(la1,ln1,la2,ln2){
   const R=6371000,dLa=(la2-la1)*Math.PI/180,dLn=(ln2-ln1)*Math.PI/180;
   const a=Math.sin(dLa/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLn/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
-function startGeo(branch){
+function startGeo(bkey){
   const st=document.getElementById('geo-st'), btn=document.getElementById('mark-btn');
   const today=toDateStr();
   if(currentPt.attendanceDates.includes(today)) return;
   if(!navigator.geolocation){ st.className='geo-st gs-far'; st.textContent='❌ Geolocation not supported.'; return; }
   st.textContent='📡 Detecting location…'; st.className='geo-st gs-wait';
-  const b=BRANCHES[branch];
+  const b=getBranch(bkey);
   window._geo=navigator.geolocation.watchPosition(pos=>{
     const d=Math.round(distM(pos.coords.latitude,pos.coords.longitude,b.lat,b.lng));
     if(d<=RADIUS){ st.className='geo-st gs-ok'; st.textContent=`✅ You are ${d} m from the clinic — ready to mark!`; btn.disabled=false; }
-    else { st.className='geo-st gs-far'; st.textContent=`📍 You are ${d} m away. Come within 75 m of ${b.name} clinic.`; btn.disabled=true; }
+    else{ st.className='geo-st gs-far'; st.textContent=`📍 You are ${d} m away. Come within 75 m of ${b.name} clinic.`; btn.disabled=true; }
   },()=>{ st.className='geo-st gs-far'; st.textContent='❌ Location denied. Allow location access and reload.'; },
   {enableHighAccuracy:true,maximumAge:15000,timeout:15000});
 }
 
-// ── MARK ATTENDANCE (GPS) ─────────────────────────────────────
 async function markAtt(){
-  const today=toDateStr(), pid=currentPt.id, branch=currentPt.branch||'mylapore';
+  const today=toDateStr(), pid=currentPt.id, bkey=branchKey(currentPt.branch||'mylapore');
   const btn=document.getElementById('mark-btn'), st=document.getElementById('geo-st');
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
-  try {
+  try{
     const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:10000}));
-    const b=BRANCHES[branch];
+    const b=getBranch(bkey);
     const d=distM(pos.coords.latitude,pos.coords.longitude,b.lat,b.lng);
     if(d>RADIUS){ st.className='geo-st gs-far'; st.textContent=`❌ ${Math.round(d)} m away. Move closer to ${b.name} clinic.`; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; return; }
-    const r=await api({action:'markAttendance',pid,date:today,lat:pos.coords.latitude,lng:pos.coords.longitude,branch});
+    const r=await api({action:'markAttendance',pid,date:today,lat:pos.coords.latitude,lng:pos.coords.longitude,branch:bkey});
     if(r.success){
       currentPt.attendanceDates=r.dates; renderPt();
       if(window._geo)navigator.geolocation.clearWatch(window._geo);
       st.className='geo-st gs-ok'; st.textContent='🎉 Attendance marked! See you tomorrow.';
       btn.textContent='Already Marked Today';
-    } else { st.textContent='❌ '+r.error; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
-  } catch(e){ st.textContent='❌ '+e.message; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
+    } else{ st.textContent='❌ '+r.error; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
+  }catch(e){ st.textContent='❌ '+e.message; btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; }
 }
 
-// ── MARK ATTENDANCE (Online) ──────────────────────────────────
 async function markAttOnline(){
   const today=toDateStr(), pid=currentPt.id;
   const btn=document.getElementById('mark-btn-online');
@@ -555,14 +547,12 @@ async function markAttOnline(){
   if(r.success){
     currentPt.attendanceDates=r.dates; renderPt();
     btn.textContent='Already Marked Today';
-  } else { btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; alert('Error: '+r.error); }
+  } else{ btn.disabled=false; btn.textContent='Mark Today\'s Attendance'; alert('Error: '+r.error); }
 }
 
-// ── ENTER KEY ─────────────────────────────────────────────────
 document.getElementById('a-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
 document.getElementById('p-id').addEventListener('keydown',e=>{if(e.key==='Enter')doPatientLogin()});
 
-// ── SERVICE WORKER ────────────────────────────────────────────
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
