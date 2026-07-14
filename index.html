@@ -317,6 +317,7 @@ async function loadPatients(){
     const done=p.attendanceDates.length, tot=p.packageDays, rem=Math.max(0,tot-done);
     const pct=tot?Math.min(100,Math.round(done/tot*100)):0;
     const branch=p.branch||'mylapore';
+    const phone=String(p.phone||'').replace(/[^0-9]/g,'');
     const waMsg=encodeURIComponent(
       'Welcome to Sheela Physiocare! 👋\n\n'+
       'Dear '+p.name+',\n\n'+
@@ -341,14 +342,13 @@ async function loadPatients(){
         <button class="btn btn-sm btn-purple" onclick="openEdit('${p.id}')">Edit</button>
         <button class="btn btn-sm btn-red" onclick="delPt('${p.id}','${p.name}')">Del</button>
         <a class="btn btn-sm" style="background:#25D366;color:white"
-          href="https://wa.me/${String(p.phone||'').replace(/[^0-9]/g,'')}?text=${waMsg}"
+          href="https://wa.me/${phone}?text=${waMsg}"
           target="_blank">WhatsApp</a>
       </div>`;
     c.appendChild(el);
   });
 }
-
-// ── LOAD LOG ──────────────────────────────────────────────────
+  // ── LOAD LOG ──────────────────────────────────────────────────
 async function loadLog(){
   const c=document.getElementById('list-log');
   c.innerHTML='<p class="muted"><span class="spin spin-d"></span> Loading…</p>';
