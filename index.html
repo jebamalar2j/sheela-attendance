@@ -341,7 +341,7 @@ async function loadPatients(){
         <button class="btn btn-sm btn-purple" onclick="openEdit('${p.id}')">Edit</button>
         <button class="btn btn-sm btn-red" onclick="delPt('${p.id}','${p.name}')">Del</button>
         <a class="btn btn-sm" style="background:#25D366;color:white"
-          href="https://wa.me/${(p.phone||'').replace(/[^0-9]/g,'')}?text=${waMsg}"
+          href="https://wa.me/${String(p.phone||'').replace(/[^0-9]/g,'')}?text=${waMsg}"
           target="_blank">WhatsApp</a>
       </div>`;
     c.appendChild(el);
