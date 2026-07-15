@@ -277,6 +277,14 @@ function toDateStr(){
   return ist.toISOString().slice(0,10);
 }
 
+function toISTDisplay(dateStr){
+  if(!dateStr) return '';
+  if(String(dateStr).length===10) return dateStr;
+  const d=new Date(dateStr);
+  const ist=new Date(d.getTime()+(5.5*60*60*1000));
+  return ist.toISOString().slice(0,10);
+}
+
 // ── ADMIN LOGIN ───────────────────────────────────────────────
 async function doAdminLogin(){
   const pass=document.getElementById('a-pass').value;
